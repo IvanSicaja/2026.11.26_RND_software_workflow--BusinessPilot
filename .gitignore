@@ -1,0 +1,26 @@
+# Python
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+.pytest_cache/
+
+# Build output (PyInstaller)
+.build-tmp/
+build/
+dist/
+publish/main
+publish/main.exe
+publish/main.app/
+
+# Profit Planner runtime files (working copy, lock, backups)
+.profitplanner/
+Backups/
+~$*.xlsx
+*.xlsx.tmp
+
+# OS / editors
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/
