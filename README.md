@@ -26,6 +26,9 @@ Where everything is: see [`directory_structure_explained.md`](directory_structur
 
 ## The app
 
+The interface uses a **dark theme**. **Hover over any element** – toolbar buttons, tabs, table buttons, column headers, input fields, result cards – and a tooltip explains what it does, when to use it and gives a **real example from this project** (e.g. *"Add year → 2027, copy 2026, +6 % when your supplier announces a price rise"*).
+
+
 | Tab | Purpose |
 |---|---|
 | **Results** | One row per configuration: gross price, VAT, production, shipping, customs, fees, taxes, **net to owner**, % of gross, break-even price, startup cash, payback. Green = best for that product. Click a row for the full breakdown, a cost bar and startup-capital details. Export to Excel. |
@@ -60,8 +63,8 @@ The complete formula and the legal-form comparison are in [`docs/02_cores-docs-a
 
 ## Tests
 
-`QT_QPA_PLATFORM=offscreen python -m pytest tests` — 94 automated tests:
-hand-calculated scenarios for every line of the calculation, break-even checks, B2B/B2C/VAT exemption/customs/region fallbacks, error handling for broken data, random-garbage fuzzing of the whole database, crash simulations (power loss during each save step, locked files, corrupt files, deleted files, lost state), conflict resolution, manual Excel edits (decimal commas, new rows, new year columns, extra columns, deleted sheets/columns), re-saving in a real spreadsheet program, and end-to-end GUI tests of every tab, every cell editor, autosave, external edits, conflicts, backups and export.
+`QT_QPA_PLATFORM=offscreen python -m pytest tests` — 130 automated tests:
+hand-calculated scenarios for every line of the calculation, break-even checks, B2B/B2C/VAT exemption/customs/region fallbacks, error handling for broken data, random-garbage fuzzing of the whole database, crash simulations (power loss during each save step, locked files, corrupt files, deleted files, lost state), conflict resolution, manual Excel edits (decimal commas, new rows, new year columns, extra columns, deleted sheets/columns), re-saving in a real spreadsheet program, tooltip coverage (every button, tab, field and column has an explanation with an example), dark-theme contrast checks (WCAG AA), and end-to-end GUI tests of every tab, every cell editor, autosave, external edits, conflicts, backups and export.
 
 ## Disclaimer
 

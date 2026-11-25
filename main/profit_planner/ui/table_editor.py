@@ -8,6 +8,7 @@ from PySide6.QtWidgets import (QAbstractItemView, QComboBox, QHBoxLayout, QHeade
                                QVBoxLayout, QWidget)
 
 from .. import schema as S
+from . import help_texts as H
 from .table_model import SheetModel, SortProxy
 
 EMPTY = "(empty)"
@@ -145,7 +146,10 @@ class TableEditor(QWidget):
         self.btn_add.clicked.connect(self.add_row)
         self.btn_dup.clicked.connect(self.duplicate_row)
         self.btn_del.clicked.connect(self.delete_rows)
-        self.btn_add.setToolTip("Add a new row (Ctrl+N when the table has focus)")
+        self.btn_add.setToolTip(H.add_tip(sheet))
+        self.btn_dup.setToolTip(H.duplicate_tip(sheet))
+        self.btn_del.setToolTip(H.delete_tip(sheet))
+        self.search.setToolTip(H.search_tip(sheet))
         self.extra_buttons = QHBoxLayout()
         head.addLayout(self.extra_buttons)
         for b in (self.btn_add, self.btn_dup, self.btn_del):

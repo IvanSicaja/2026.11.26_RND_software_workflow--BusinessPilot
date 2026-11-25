@@ -10,6 +10,8 @@ from PySide6.QtWidgets import (QAbstractItemView, QCheckBox, QComboBox, QDoubleS
 
 from .. import schema as S
 from ..calc import Engine, Result
+from . import help_texts as H
+from . import theme
 from .widgets import money
 
 COLS = ["Rank", "HQ country", "Legal form", "Liability", "Startup cash", "Gross price", "Production",
@@ -126,6 +128,23 @@ class ExplorerView(QWidget):
         split.setSizes([360, 900])
         lay.addWidget(split, 1)
 
+        for w, key in ((self.product, "product"), (self.market, "market"), (self.sale_type, "sale_type"),
+                       (self.payment, "payment"), (self.year, "year"), (self.mode_fixed, "fixed"),
+                       (self.mode_markup, "markup"), (self.price, "price"), (self.price_cur, "price_cur"),
+                       (self.markup, "markup_value"), (self.volume, "volume"), (self.stock, "stock"),
+                       (self.commission, "commission"), (self.sbe, "sbe"), (self.hq_list, "hq_list"),
+                       (self.btn_run, "run"), (self.btn_save, "save")):
+            w.setToolTip(H.EXPLORER[key])
+        self.table.viewport().setToolTip(H.EXPLORER["table"])
+        for j, name in enumerate(COLS):
+            self.table.horizontalHeaderItem(j).setToolTip(H.explorer_column_tip(name))
+        for k in range(form.rowCount()):
+            label = form.itemAt(k, QFormLayout.LabelRole)
+            field = form.itemAt(k, QFormLayout.FieldRole)
+            if label is not None and label.widget() is not None and field is not None:
+                fw = field.widget() or (field.layout().itemAt(0).widget() if field.layout() else None)
+                if fw is not None:
+                    label.widget().setToolTip(fw.toolTip())
         self.mode_fixed.toggled.connect(self._mode)
         self.market.currentIndexChanged.connect(self._market_changed)
         self._mode()
@@ -267,9 +286,9 @@ class ExplorerView(QWidget):
                 if 4 <= j <= 12:
                     it.setTextAlignment(Qt.AlignRight | Qt.AlignVCenter)
                 if r is best:
-                    it.setBackground(QBrush(QColor("#E3F4E4")))
+                    it.setBackground(QBrush(QColor(theme.GOOD_BG)))
                 elif not r.ok or (r.ok and r.net_to_owner < 0):
-                    it.setBackground(QBrush(QColor("#FDE2E1")))
+                    it.setBackground(QBrush(QColor(theme.BAD_BG)))
                 if j == 9:
                     f = QFont()
                     f.setBold(True)

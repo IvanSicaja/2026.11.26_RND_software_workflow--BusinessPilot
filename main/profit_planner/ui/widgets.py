@@ -3,6 +3,7 @@ from __future__ import annotations
 
 from PySide6.QtCore import QRectF, Qt
 from PySide6.QtGui import QColor, QFont, QPainter, QPen
+from . import theme
 from PySide6.QtWidgets import QFrame, QLabel, QSizePolicy, QVBoxLayout, QWidget
 
 
@@ -42,15 +43,7 @@ class KpiCard(QFrame):
         self.v.style().polish(self.v)
 
 
-SEGMENT_COLORS = {
-    "Net to owner": "#2E7D32",
-    "Taxes": "#8E24AA",
-    "VAT": "#9E9E9E",
-    "Production": "#1565C0",
-    "Shipping & customs": "#EF6C00",
-    "Fees & returns": "#F9A825",
-    "Loss": "#C62828",
-}
+SEGMENT_COLORS = theme.SEGMENTS
 
 
 class BreakdownBar(QWidget):
@@ -85,7 +78,7 @@ class BreakdownBar(QWidget):
         w = self.width()
         bar_h = 22
         if not self.segments or self.total <= 0:
-            p.setPen(QColor("#888"))
+            p.setPen(QColor(theme.TEXT_MUTED))
             p.drawText(self.rect(), Qt.AlignCenter, "No breakdown available")
             return
         x = 0.0
@@ -96,7 +89,7 @@ class BreakdownBar(QWidget):
             seg_w = w * v / self.total
             p.fillRect(QRectF(x, 0, seg_w, bar_h), QColor(SEGMENT_COLORS[name]))
             if seg_w > 46:
-                p.setPen(QPen(QColor("white")))
+                p.setPen(QPen(QColor(theme.text_on(SEGMENT_COLORS[name]))))
                 p.drawText(QRectF(x, 0, seg_w, bar_h), Qt.AlignCenter, f"{v / self.total * 100:.0f}%")
             x += seg_w
         # legend

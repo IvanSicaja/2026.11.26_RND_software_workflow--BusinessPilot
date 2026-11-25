@@ -5,9 +5,10 @@ from PySide6.QtCore import QAbstractTableModel, QModelIndex, QSortFilterProxyMod
 from PySide6.QtGui import QBrush, QColor, QFont
 
 from .. import schema as S
+from . import help_texts, theme
 from ..database import display
 
-ERROR_BG = QColor("#FDE2E1")
+ERROR_BG = QColor(theme.BAD_BG)
 KEY_FONT = QFont()
 KEY_FONT.setBold(True)
 NUMERIC_KINDS = (S.NUMBER, S.PERCENT, S.INTEGER)
@@ -92,11 +93,7 @@ class SheetModel(QAbstractTableModel):
                 c = self.table.col(name)
                 return name + (" *" if c is not None and c.required else "")
             if role == Qt.ToolTipRole:
-                c = self.table.col(name)
-                tip = c.help if c is not None and c.help else name
-                if c is not None and c.required:
-                    tip += "\n(required)"
-                return tip
+                return help_texts.column_tip(self.sheet, name, self.table.col(name))
         if orientation == Qt.Vertical and role == Qt.DisplayRole and 0 <= section < len(self._rows):
             return str(self._rows[section] + 2)  # same row number as in Excel
         return None

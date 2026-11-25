@@ -50,6 +50,8 @@ ProfitPlanner/
 │       ├── app.py                 # Application start, style, window handling
 │       └── ui/                    # User interface (PySide6): main window, tables, results,
 │                                  # "Where to found?" comparison, dialogs
+│           ├── theme.py           # Dark theme: every colour of the interface in one place
+│           └── help_texts.py      # Hover explanations with real examples for every element
 │
 ├── models/                        # ML / AI models – not used in this project
 │   ├── 01_downloaded/
@@ -64,12 +66,13 @@ ProfitPlanner/
 │   ├── run_windows.bat            # Starts the app from source on Windows
 │   └── ProfitPlanner.spec         # PyInstaller build specification
 │
-├── tests/                         # 94 automated tests
+├── tests/                         # 130 automated tests
 │   ├── conftest.py                # Test setup (small hand-calculable database)
 │   ├── test_calc.py               # Calculation results line by line
 │   ├── test_database.py           # Validation, input parsing, fuzzing
 │   ├── test_storage.py            # Save safety: power loss, locked/corrupt files, conflicts, Excel edits
-│   └── test_gui.py                # End-to-end tests of the user interface
+│   ├── test_gui.py                # End-to-end tests of the user interface
+│   └── test_help_and_theme.py     # Every element has a tooltip with an example; dark theme contrast
 │
 ├── viz/                           # Visualization outputs – empty for now
 │   ├── 01_mind-maps/

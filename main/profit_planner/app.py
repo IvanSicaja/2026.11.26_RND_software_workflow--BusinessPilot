@@ -7,48 +7,18 @@ import traceback
 from pathlib import Path
 
 from PySide6.QtCore import QLockFile, QSettings, QStandardPaths, Qt
-from PySide6.QtGui import QColor, QFont, QPalette
+from PySide6.QtGui import QFont
 from PySide6.QtWidgets import QApplication, QFileDialog, QMessageBox
 
 from . import APP_NAME
 from .excel_io import WorkbookError
 from .storage import DEFAULT_DB_NAME, SafeStore
+from .ui import theme
 from .ui.controller import Controller
 from .ui.dialogs import ask_conflict
 from .ui.main_window import MainWindow
 
-STYLE = """
-QMainWindow, QWidget { font-size: 10pt; }
-QToolBar { spacing: 4px; padding: 4px; border: none; border-bottom: 1px solid #D0D7E2; background: #F4F7FB; }
-QToolBar QToolButton { padding: 5px 10px; border-radius: 4px; }
-QToolBar QToolButton:hover { background: #DCE6F3; }
-QTabWidget::pane { border: none; }
-QTabBar::tab { padding: 8px 16px; border: none; color: #44546A; }
-QTabBar::tab:selected { color: #1F4E78; border-bottom: 3px solid #2E75B6; font-weight: bold; }
-QTabBar::tab:hover { color: #1F4E78; }
-QLabel#pageTitle { font-size: 15pt; font-weight: bold; color: #1F4E78; }
-QLabel#sectionTitle { font-size: 11pt; color: #1F4E78; }
-QLabel#hint { color: #5F6B7A; }
-QPushButton { padding: 5px 12px; border: 1px solid #B8C4D4; border-radius: 4px; background: #FFFFFF; }
-QPushButton:hover { background: #EEF3F9; }
-QPushButton:disabled { color: #A0A8B4; }
-QPushButton#primaryButton { background: #2E75B6; color: white; border-color: #2E75B6; font-weight: bold;
-                            padding: 8px; }
-QPushButton#primaryButton:hover { background: #1F4E78; }
-QPushButton#dangerButton:hover { background: #FDE2E1; border-color: #C62828; }
-QTableView { gridline-color: #E3E8EF; selection-background-color: #CFE2F7; selection-color: black;
-             alternate-background-color: #F8FAFD; }
-QHeaderView::section { background: #EEF2F7; padding: 4px; border: none; border-right: 1px solid #DDE3EA;
-                       border-bottom: 1px solid #C9D3DF; font-weight: bold; color: #2B3A4F; }
-QFrame#kpiCard { background: #F4F7FB; border: 1px solid #DCE3EC; border-radius: 6px; }
-QLabel#kpiTitle { color: #5F6B7A; font-size: 9pt; }
-QLabel#kpiValue { font-size: 15pt; font-weight: bold; color: #1F2D3D; }
-QLabel#kpiValue[state="good"] { color: #2E7D32; }
-QLabel#kpiValue[state="bad"] { color: #C62828; }
-QLabel#kpiSub { color: #5F6B7A; font-size: 9pt; }
-QGroupBox { font-weight: bold; border: 1px solid #DCE3EC; border-radius: 6px; margin-top: 10px; padding-top: 8px; }
-QGroupBox::title { subcontrol-origin: margin; left: 8px; padding: 0 4px; color: #1F4E78; }
-"""
+STYLE = theme.STYLE
 
 
 _WINDOWS: list = []  # keep windows alive
@@ -70,18 +40,7 @@ def create_application(argv=None) -> QApplication:
     app.setOrganizationName("ProfitPlanner")
     app.setApplicationName(APP_NAME)
     app.setStyle("Fusion")
-    pal = QPalette()
-    pal.setColor(QPalette.Window, QColor("#FFFFFF"))
-    pal.setColor(QPalette.Base, QColor("#FFFFFF"))
-    pal.setColor(QPalette.AlternateBase, QColor("#F8FAFD"))
-    pal.setColor(QPalette.Text, QColor("#1F2D3D"))
-    pal.setColor(QPalette.WindowText, QColor("#1F2D3D"))
-    pal.setColor(QPalette.ButtonText, QColor("#1F2D3D"))
-    pal.setColor(QPalette.Button, QColor("#FFFFFF"))
-    pal.setColor(QPalette.Highlight, QColor("#2E75B6"))
-    pal.setColor(QPalette.ToolTipBase, QColor("#FFFFE8"))
-    pal.setColor(QPalette.ToolTipText, QColor("#1F2D3D"))
-    app.setPalette(pal)
+    app.setPalette(theme.palette())
     f = QFont(app.font())
     if f.pointSizeF() < 9.5:
         f.setPointSizeF(10)

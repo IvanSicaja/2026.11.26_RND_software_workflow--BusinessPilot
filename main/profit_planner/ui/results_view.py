@@ -8,12 +8,14 @@ from PySide6.QtWidgets import (QAbstractItemView, QCheckBox, QComboBox, QFileDia
                                QTableView, QTableWidget, QTableWidgetItem, QVBoxLayout, QWidget)
 
 from ..calc import Result
+from . import help_texts as H
+from . import theme
 from .table_model import SortProxy
 from .widgets import BreakdownBar, KpiCard, money, pct
 
-GOOD = QColor("#E3F4E4")
-BAD = QColor("#FDE2E1")
-WARN = QColor("#FFF6DA")
+GOOD = QColor(theme.GOOD_BG)
+BAD = QColor(theme.BAD_BG)
+WARN = QColor(theme.WARN_BG)
 
 COLUMNS = [
     ("ID", "config_id", "text"), ("Name", "name", "text"), ("Product", "product_name", "text"),
@@ -66,11 +68,7 @@ class ResultsModel(QAbstractTableModel):
         if o == Qt.Horizontal and role == Qt.DisplayRole:
             return COLUMNS[s][0]
         if o == Qt.Horizontal and role == Qt.ToolTipRole:
-            return {"NET TO OWNER": "What you keep per unit after every cost and tax (incl. dividend tax).",
-                    "Startup cash": "Formation costs + max(min. share capital, tools + startup stock).",
-                    "Break-even price": "Gross price (incl. VAT) at which profit before tax is 0.",
-                    "% of gross": "Net to owner as a share of the gross price paid by the customer."
-                    }.get(COLUMNS[s][0])
+            return H.result_column_tip(COLUMNS[s][0])
         return None
 
     def data(self, index, role=Qt.DisplayRole):
@@ -115,7 +113,8 @@ class ResultsModel(QAbstractTableModel):
             if r.warnings:
                 return "\n".join(r.warnings)
             if id(r) in self.best:
-                return "Best configuration for this product"
+                return "Best configuration for this product. Double-click to edit it."
+            return "Double-click to edit this configuration."
         return None
 
 
@@ -133,7 +132,9 @@ class ResultsView(QWidget):
         self.heading.setObjectName("pageTitle")
         bar.addWidget(self.heading)
         bar.addStretch(1)
-        bar.addWidget(QLabel("Product:"))
+        lbl = QLabel("Product:")
+        lbl.setToolTip(H.RESULTS["product_filter"])
+        bar.addWidget(lbl)
         self.product_filter = QComboBox()
         self.product_filter.setMinimumWidth(200)
         self.product_filter.currentIndexChanged.connect(self.refresh)
@@ -141,12 +142,16 @@ class ResultsView(QWidget):
         self.only_active = QCheckBox("Active only")
         self.only_active.setChecked(True)
         self.only_active.toggled.connect(self.refresh)
+        self.product_filter.setToolTip(H.RESULTS["product_filter"])
+        self.only_active.setToolTip(H.RESULTS["only_active"])
         bar.addWidget(self.only_active)
         self.btn_edit = QPushButton("Edit configuration")
         self.btn_edit.clicked.connect(self._edit)
         bar.addWidget(self.btn_edit)
         self.btn_export = QPushButton("Export to Excel...")
         self.btn_export.clicked.connect(self.export)
+        self.btn_edit.setToolTip(H.RESULTS["edit"])
+        self.btn_export.setToolTip(H.RESULTS["export"])
         bar.addWidget(self.btn_export)
         lay.addLayout(bar)
 
@@ -173,6 +178,7 @@ class ResultsView(QWidget):
         self._sized = False
         self.table.selectionModel().currentRowChanged.connect(self._show_current)
         self.table.doubleClicked.connect(lambda _i: self._edit())
+        self.table.viewport().setToolTip(H.RESULTS["table"])
         split.addWidget(self.table)
 
         detail = QWidget()
@@ -188,18 +194,24 @@ class ResultsView(QWidget):
         self.k_start = KpiCard("Startup cash required")
         self.k_liab = KpiCard("Company")
         for k in (self.k_gross, self.k_net, self.k_year, self.k_start, self.k_liab):
+            k.setToolTip(H.KPI[k.t.text()])
             cards.addWidget(k)
         dl.addLayout(cards)
         self.bar = BreakdownBar()
+        self.bar.setToolTip(H.RESULTS["bar"])
         dl.addWidget(self.bar)
         lower = QSplitter(Qt.Horizontal)
         self.lines = QTableWidget(0, 2)
         self.lines.setHorizontalHeaderLabels(["Price breakdown per unit", "Amount"])
         self._setup_small_table(self.lines)
+        self.lines.setProperty("help", H.RESULTS["lines"])
+        self.lines.horizontalHeader().setToolTip(H.RESULTS["lines"])
         lower.addWidget(self.lines)
         self.side = QTableWidget(0, 2)
         self.side.setHorizontalHeaderLabels(["Startup capital & details", "Value"])
         self._setup_small_table(self.side)
+        self.side.setProperty("help", H.RESULTS["side"])
+        self.side.horizontalHeader().setToolTip(H.RESULTS["side"])
         lower.addWidget(self.side)
         lower.setSizes([600, 450])
         dl.addWidget(lower, 1)
@@ -303,8 +315,7 @@ class ResultsView(QWidget):
 
         for ln in r.lines:
             self._add(self.lines, ln.label, money(ln.amount, cur), bold=ln.group == "Result",
-                      color={"Result": None, "Tax": "#6A1B9A", "Deduction": "#8D6E00",
-                             "Cost": "#0D47A1"}.get(ln.group), note=ln.note)
+                      color=theme.LINE_COLORS.get(ln.group), note=ln.note)
         side = [
             ("Min. share capital", money(r.share_capital, cur)),
             ("Formation costs", money(r.formation_costs, cur)),
@@ -328,7 +339,7 @@ class ResultsView(QWidget):
             self._add(self.side, "", "")
             self._add(self.side, "WARNINGS", "", bold=True)
             for w in r.warnings:
-                self._add(self.side, w, "", color="#8D6E00")
+                self._add(self.side, w, "", color=theme.WARN)
 
     @staticmethod
     def _add(t: QTableWidget, a: str, b: str, bold=False, color=None, note=""):
@@ -336,8 +347,11 @@ class ResultsView(QWidget):
         t.insertRow(row)
         ia, ib = QTableWidgetItem(a), QTableWidgetItem(b)
         ib.setTextAlignment(Qt.AlignRight | Qt.AlignVCenter)
-        if note:
-            ia.setToolTip(note)
+        help_text = t.property("help") or ""
+        if note and help_text:
+            help_text = help_text.replace("</qt>", f"<p style='margin:6px 0 0 0'><b>This line:</b> {note}</p></qt>")
+        ia.setToolTip(help_text)
+        ib.setToolTip(help_text)
         if bold:
             f = ia.font()
             f.setBold(True)

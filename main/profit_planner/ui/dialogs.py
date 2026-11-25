@@ -5,6 +5,8 @@ from datetime import datetime
 from pathlib import Path
 
 from PySide6.QtCore import Qt
+
+from . import help_texts as H
 from PySide6.QtWidgets import (QComboBox, QDialog, QDialogButtonBox, QDoubleSpinBox, QFormLayout,
                                QLabel, QListWidget, QListWidgetItem, QMessageBox, QPushButton,
                                QSpinBox, QVBoxLayout)
@@ -31,6 +33,9 @@ class AddYearDialog(QDialog):
         self.increase.setRange(-100, 1000)
         self.increase.setDecimals(2)
         self.increase.setSuffix(" %")
+        self.year.setToolTip(H.ADD_YEAR_FIELDS["year"])
+        self.copy_from.setToolTip(H.ADD_YEAR_FIELDS["copy"])
+        self.increase.setToolTip(H.ADD_YEAR_FIELDS["increase"])
         form.addRow("New year", self.year)
         form.addRow("Copy prices from", self.copy_from)
         form.addRow("Change prices by", self.increase)
@@ -67,6 +72,7 @@ class IssuesDialog(QDialog):
             it = QListWidgetItem(("⛔ " if i.level == "error" else "⚠ ") + str(i).split("] ", 1)[-1])
             it.setData(Qt.UserRole, i)
             self.list.addItem(it)
+        self.list.setToolTip(H.ISSUE_LIST)
         self.list.itemDoubleClicked.connect(lambda it: (on_jump(it.data(Qt.UserRole)), self.accept()))
         lay.addWidget(self.list, 1)
         bb = QDialogButtonBox(QDialogButtonBox.Close)
@@ -92,9 +98,13 @@ class BackupsDialog(QDialog):
             it = QListWidgetItem(f"{dt:%Y-%m-%d %H:%M:%S}    {p.name}")
             it.setData(Qt.UserRole, str(p))
             self.list.addItem(it)
+        self.list.setToolTip(H.BACKUP_LIST)
         lay.addWidget(self.list, 1)
         bb = QDialogButtonBox()
         self.restore = QPushButton("Restore selected")
+        self.restore.setToolTip(H.tip("Restore selected", "Loads the selected backup into the app and saves it as "
+                                      "the current version (the current one is backed up first).",
+                                      "Undo yesterday's accidental deletion of all walnut prices."))
         bb.addButton(self.restore, QDialogButtonBox.AcceptRole)
         bb.addButton(QDialogButtonBox.Close)
         bb.accepted.connect(self._ok)
@@ -119,6 +129,12 @@ def ask_conflict(parent) -> str:
                            "in the 'Backups' folder.")
     b_app = box.addButton("Keep app version", QMessageBox.AcceptRole)
     b_xl = box.addButton("Keep Excel version", QMessageBox.DestructiveRole)
+    b_app.setToolTip(H.tip("Keep app version", "The Excel file is replaced by what you see in the app.",
+                           "You changed prices in the app and someone only opened and re-saved the Excel file - "
+                           "keep the app version."))
+    b_xl.setToolTip(H.tip("Keep Excel version", "The app loads the Excel file; the app's unsaved changes are "
+                          "stored in 'Backups'.", "Your colleague entered all 2027 prices in Excel - keep the "
+                          "Excel version."))
     box.setDefaultButton(b_app)
     box.exec()
     return "excel" if box.clickedButton() is b_xl else "app"

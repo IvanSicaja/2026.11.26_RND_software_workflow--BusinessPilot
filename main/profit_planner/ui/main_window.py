@@ -1,6 +1,7 @@
 """Main application window."""
 from __future__ import annotations
 
+from html import escape
 from pathlib import Path
 
 from PySide6.QtCore import QSettings, Qt, QUrl
@@ -12,6 +13,8 @@ from PySide6.QtWidgets import (QCheckBox, QFileDialog, QHBoxLayout, QLabel, QMai
 from .. import APP_NAME, __version__
 from .. import schema as S
 from ..calc import Engine
+from . import help_texts as H
+from . import theme
 from .controller import Controller
 from .dialogs import AddYearDialog, BackupsDialog, IssuesDialog, ask_conflict
 from .explorer_view import ExplorerView
@@ -72,7 +75,7 @@ class MainWindow(QMainWindow):
             a.triggered.connect(slot)
             if shortcut:
                 a.setShortcut(QKeySequence(shortcut))
-            a.setToolTip(tip or text)
+            a.setToolTip(H.TOOLBAR.get(text, tip or text))
             tb.addAction(a)
             return a
 
@@ -89,7 +92,7 @@ class MainWindow(QMainWindow):
         tb.addSeparator()
         self.autosave_cb = QCheckBox("Autosave")
         self.autosave_cb.setChecked(self.c.autosave)
-        self.autosave_cb.setToolTip("Save automatically about one second after every change")
+        self.autosave_cb.setToolTip(H.TOOLBAR["Autosave"])
         self.autosave_cb.toggled.connect(self._toggle_autosave)
         tb.addWidget(self.autosave_cb)
         spacer = QWidget()
@@ -151,9 +154,10 @@ class MainWindow(QMainWindow):
             i = self.tabs.count()
             e = self._editor(sheet, i, title)
             b1 = QPushButton("Add year...")
-            b1.setToolTip("Add a price column for a new year (optionally copy and increase the prices)")
+            b1.setToolTip(H.ADD_YEAR)
             b1.clicked.connect(lambda _=False, s=sheet: self.add_year(s))
             b2 = QPushButton("Remove year...")
+            b2.setToolTip(H.REMOVE_YEAR)
             b2.clicked.connect(lambda _=False, s=sheet: self.remove_year(s))
             e.extra_buttons.addWidget(b1)
             e.extra_buttons.addWidget(b2)
@@ -179,6 +183,10 @@ class MainWindow(QMainWindow):
         self.tabs.addTab(_page(_vsplit(self._editor(S.FX, i, "Exchange rates"),
                                        self._editor(S.SETTINGS, i, "Settings"), sizes=[400, 250])),
                          "Currencies && Settings")
+        for k in range(self.tabs.count()):
+            self.tabs.setTabToolTip(k, H.TABS[self.tabs.tabText(k).replace("&&", "&")])
+        for k in range(inner.count()):
+            inner.setTabToolTip(k, H.INNER_TABS[inner.tabText(k)])
 
     def _build_statusbar(self):
         sb = QStatusBar()
@@ -188,6 +196,8 @@ class MainWindow(QMainWindow):
         self.issues_btn = QPushButton("")
         self.issues_btn.setFlat(True)
         self.issues_btn.clicked.connect(self.show_issues)
+        self.issues_btn.setToolTip(H.ISSUES)
+        self.status_dot.setToolTip(H.STATUS)
         w = QWidget()
         lay = QHBoxLayout(w)
         lay.setContentsMargins(6, 0, 6, 0)
@@ -203,18 +213,19 @@ class MainWindow(QMainWindow):
         return errs, len(self.c.issues) - errs
 
     def _status(self, level: str, msg: str):
-        color = {"ok": "#2E7D32", "pending": "#EF8F00", "error": "#C62828", "info": "#1565C0"}.get(level, "#555")
+        color = {"ok": theme.GOOD, "pending": theme.WARN, "error": theme.BAD, "info": theme.INFO}.get(level, theme.TEXT_MUTED)
         self.status_dot.setStyleSheet(f"color: {color}; font-size: 16px;")
         self.status_label.setText(msg)
-        self.status_label.setToolTip(msg)
+        self.status_label.setToolTip(H.STATUS.replace("</qt>", f"<p style='margin:6px 0 0 0'><b>Current:</b> "
+                                                            f"{escape(msg)}</p></qt>"))
 
     def _issues(self, errors: int, warnings: int):
         if errors or warnings:
             self.issues_btn.setText(f"⚠ {errors} error(s), {warnings} warning(s) - click to see")
-            self.issues_btn.setStyleSheet("color: #C62828; font-weight: bold;" if errors else "color: #8D6E00;")
+            self.issues_btn.setStyleSheet(f"color: {theme.BAD}; font-weight: bold;" if errors else f"color: {theme.WARN};")
         else:
             self.issues_btn.setText("✓ Data check: no problems")
-            self.issues_btn.setStyleSheet("color: #2E7D32;")
+            self.issues_btn.setStyleSheet(f"color: {theme.GOOD};")
 
     def _update_title(self):
         name = self.c.db.setting("Company Name", "")

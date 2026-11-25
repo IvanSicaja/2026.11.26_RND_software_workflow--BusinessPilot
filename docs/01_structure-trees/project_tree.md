@@ -36,10 +36,12 @@ ProfitPlanner/
 │   │   │   ├── controller.py
 │   │   │   ├── dialogs.py
 │   │   │   ├── explorer_view.py
+│   │   │   ├── help_texts.py
 │   │   │   ├── main_window.py
 │   │   │   ├── results_view.py
 │   │   │   ├── table_editor.py
 │   │   │   ├── table_model.py
+│   │   │   ├── theme.py
 │   │   │   └── widgets.py
 │   │   ├── __init__.py
 │   │   ├── app.py
@@ -65,6 +67,7 @@ ProfitPlanner/
 │   ├── test_calc.py
 │   ├── test_database.py
 │   ├── test_gui.py
+│   ├── test_help_and_theme.py
 │   └── test_storage.py
 ├── viz/
 │   ├── 01_mind-maps/
@@ -86,5 +89,6 @@ main/main.py
         ├─ calc.Engine              price breakdown and net profit per configuration
         └─ ui/                      main_window, table_editor + table_model (editing),
                                     results_view (Results tab), explorer_view (Where to found?),
-                                    controller (autosave, Excel change detection), dialogs
+                                    controller (autosave, Excel change detection), dialogs,
+                                    theme (dark colours), help_texts (hover explanations)
 ```
